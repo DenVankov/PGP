@@ -1,0 +1,320 @@
+GPU:
+n: 737
+Threads: 32, 32
+0.012ms
+
+GPU:
+n: 201
+Threads: 32, 32
+0.014ms
+
+GPU:
+n: 919
+Threads: 32, 32
+0.014ms
+
+GPU:
+n: 339
+Threads: 32, 32
+0.019ms
+
+GPU:
+n: 405
+Threads: 32, 32
+0.013ms
+
+GPU:
+n: 667
+Threads: 32, 32
+0.012ms
+
+GPU:
+n: 370
+Threads: 32, 32
+0.016ms
+
+GPU:
+n: 668
+Threads: 32, 32
+0.018ms
+
+GPU:
+n: 747
+Threads: 32, 32
+0.012ms
+
+GPU:
+n: 986
+Threads: 32, 32
+0.011ms
+
+GPU:
+n: 161634
+Threads: 32, 32
+0.013ms
+
+GPU:
+n: 358564
+Threads: 32, 32
+0.015ms
+
+GPU:
+n: 485766
+Threads: 32, 32
+0.014ms
+
+GPU:
+n: 167730
+Threads: 32, 32
+0.018ms
+
+GPU:
+n: 269817
+Threads: 32, 32
+0.013ms
+
+GPU:
+n: 807268796
+Threads: 32, 32
+0.018ms
+
+GPU:
+n: 737
+Threads: 128, 128
+0.014ms
+
+GPU:
+n: 201
+Threads: 128, 128
+0.017ms
+
+GPU:
+n: 919
+Threads: 128, 128
+0.013ms
+
+GPU:
+n: 339
+Threads: 128, 128
+0.017ms
+
+GPU:
+n: 405
+Threads: 128, 128
+0.016ms
+
+GPU:
+n: 667
+Threads: 128, 128
+0.018ms
+
+GPU:
+n: 370
+Threads: 128, 128
+0.018ms
+
+GPU:
+n: 668
+Threads: 128, 128
+0.02ms
+
+GPU:
+n: 747
+Threads: 128, 128
+0.018ms
+
+GPU:
+n: 986
+Threads: 128, 128
+0.018ms
+
+GPU:
+n: 161634
+Threads: 128, 128
+0.021ms
+
+GPU:
+n: 358564
+Threads: 128, 128
+0.023ms
+
+GPU:
+n: 485766
+Threads: 128, 128
+0.018ms
+
+GPU:
+n: 167730
+Threads: 128, 128
+0.015ms
+
+GPU:
+n: 269817
+Threads: 128, 128
+0.029ms
+
+GPU:
+n: 807268796
+Threads: 128, 128
+0.027ms
+
+GPU:
+n: 737
+Threads: 512, 512
+0.014ms
+
+GPU:
+n: 201
+Threads: 512, 512
+0.019ms
+
+GPU:
+n: 919
+Threads: 512, 512
+0.013ms
+
+GPU:
+n: 339
+Threads: 512, 512
+0.012ms
+
+GPU:
+n: 405
+Threads: 512, 512
+0.012ms
+
+GPU:
+n: 667
+Threads: 512, 512
+0.012ms
+
+GPU:
+n: 370
+Threads: 512, 512
+0.011ms
+
+GPU:
+n: 668
+Threads: 512, 512
+0.016ms
+
+GPU:
+n: 747
+Threads: 512, 512
+0.019ms
+
+GPU:
+n: 986
+Threads: 512, 512
+0.021ms
+
+GPU:
+n: 161634
+Threads: 512, 512
+0.015ms
+
+GPU:
+n: 358564
+Threads: 512, 512
+0.021ms
+
+GPU:
+n: 485766
+Threads: 512, 512
+0.016ms
+
+GPU:
+n: 167730
+Threads: 512, 512
+0.04ms
+
+GPU:
+n: 269817
+Threads: 512, 512
+0.025ms
+
+GPU:
+n: 807268796
+Threads: 512, 512
+0.018ms
+
+GPU:
+n: 737
+Threads: 1024, 1024
+0.02ms
+
+GPU:
+n: 201
+Threads: 1024, 1024
+0.02ms
+
+GPU:
+n: 919
+Threads: 1024, 1024
+0.015ms
+
+GPU:
+n: 339
+Threads: 1024, 1024
+0.013ms
+
+GPU:
+n: 405
+Threads: 1024, 1024
+0.012ms
+
+GPU:
+n: 667
+Threads: 1024, 1024
+0.01ms
+
+GPU:
+n: 370
+Threads: 1024, 1024
+0.012ms
+
+GPU:
+n: 668
+Threads: 1024, 1024
+0.012ms
+
+GPU:
+n: 747
+Threads: 1024, 1024
+0.019ms
+
+GPU:
+n: 986
+Threads: 1024, 1024
+0.02ms
+
+GPU:
+n: 161634
+Threads: 1024, 1024
+0.025ms
+
+GPU:
+n: 358564
+Threads: 1024, 1024
+0.02ms
+
+GPU:
+n: 485766
+Threads: 1024, 1024
+0.023ms
+
+GPU:
+n: 167730
+Threads: 1024, 1024
+0.014ms
+
+GPU:
+n: 269817
+Threads: 1024, 1024
+0.014ms
+
+GPU:
+n: 807268796
+Threads: 1024, 1024
+0.025ms
+
