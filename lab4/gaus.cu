@@ -5,147 +5,156 @@
 #include<vector>
 #include<algorithm>
 #include <climits>
-// #include <thrust/device_vector.h>
-// #include <thrust/host_vector.h>
-#include <thrust/functional.h>
 #include <thrust/swap.h>
 #include <thrust/extrema.h>
-// #include <thrust/execution_policy.h>
-#include <thrust/iterator/transform_iterator.h>
+#include <thrust/functional.h>
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
 using namespace std;
 
 typedef long long ll;
 
 #define CUDA_ERROR(err) { \
-    if (err != cudaSuccess) { \
-        fprintf(stderr, "ERROR: CUDA failed in %s:%d: %s\n", __FILE__, __LINE__, cudaGetErrorString(err)); \
+	if (err != cudaSuccess) { \
+		fprintf(stderr, "ERROR: CUDA failed in %s:%d: %s\n", __FILE__, __LINE__, cudaGetErrorString(err)); \
 		return(1); \
-    } \
+	} \
 } \
 
-struct abs_functor : public thrust::unary_function<double, double> {
-    __host__ __device__ double operator()(double x) const {
-        return x > 0.0 ? x : -x;
-    }
-};
-
 struct abs_comparator{
-    abs_functor fabs;
-    __host__ __device__ double operator()(double x, double y){
-        return fabs(x) < fabs(y);
-    }
+	__host__ __device__ bool operator()(double x, double y) {
+		return fabs(x) < fabs(y);
+	}
 };
 
 __global__ void kernel_compute_L (double* data, int n, int i) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int offsetx = gridDim.x * blockDim.x;
-    for (int j = idx + i + 1; j < n; j += offsetx) {
-        int q = 0;
-        while (q < i) {
-            data[j + i * n] -= data[j + q * n] * data[q + i * n];
-            q++;
-        }
-        data[j + i * n] /= data[i + i * n];
-    }
+	int idx = blockIdx.x * blockDim.x + threadIdx.x;
+	int offsetX = gridDim.x * blockDim.x;
+	for (int j = idx + i + 1; j < n; j += offsetX) {
+		data[j + i * n] /= data[i + i * n];
+	}
 }
 
 __global__ void kernel_compute_U (double* data, int n, int i) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int offsetx = gridDim.x * blockDim.x;
-    for (int j = idx + i; j < n; j += offsetx) {
-        int q = 0;
-        while (q < i) {
-            data[i + j * n] -= data[i + q * n] * data[q + j * n];
-            q++;
-        }
-    }
+	int idx = blockIdx.x * blockDim.x + threadIdx.x;
+	int idy = blockIdx.y * blockDim.y + threadIdx.y;
+	int offsetX = gridDim.x * blockDim.x;
+	int offsetY = gridDim.y * blockDim.y;
+	for (int j = idx + i + 1; j < n; j += offsetX) {
+		for (int q = idy + i + 1; q < n; q += offsetY) {
+			data[j + q * n] -= data[j + i * n] * data[i + q * n];
+		}
+	}
 }
 
-__global__ void swapping(double* data, int n, int i, int max_id){
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int offsetx = gridDim.x * blockDim.x;
+// for (int j = i; j < n; ++j) {
+//  for (int q = 0; q < i; ++q) {
+//      data[i + j * n] -= data[i + q * n] * data[q + j * n];
+//  }
+// }
 
-    for(int j = idx; j < n; j += offsetx){
-        double tmp = data[i + j * n];
-        data[i + j * n] = data[max_id + j * n];
-        data[max_id + j * n] = tmp;
-    }
+__global__ void kernel_swap(double* data, int n, int i, int max_idx) {
+	int idx = blockIdx.x * blockDim.x + threadIdx.x;
+	int offsetX = gridDim.x * blockDim.x;
+
+	for (int j = idx; j < n; j += offsetX) {
+		thrust::swap(data[i + j * n], data[max_idx + j * n]);
+	}
 }
 
 int main(int argc, char const *argv[]) {
-    ios_base::sync_with_stdio(false);
-    cin.tie(nullptr);
-    cout.tie(nullptr);
-    int n;
-    cin >> n;
+	ios_base::sync_with_stdio(false);
+	cin.tie(nullptr);
+	cout.tie(nullptr);
+	int n;
+	cin >> n;
 
-    vector<double> data(n * n);
-    vector<int> p(n);
+	double* data, *dev_data;
+	CUDA_ERROR(cudaMalloc((void**)&dev_data, sizeof(double) * n * n));
+	int* p = (int*)malloc(sizeof(int) * n);
+	data = (double*)malloc(sizeof(double) * n * n);
 
-    for (int i = 0; i < n; ++i) {
-        p[i] = i;
+	// Data inputing + p initializing
+	for (int i = 0; i < n; ++i) {
+		p[i] = i;
 
-        for (int j = 0; j < n; ++j) {
-            cin >> data[i + j * n];
-        }
-    }
+		for (int j = 0; j < n; ++j) {
+			cin >> data[i + j * n];
+		}
+	}
 
-    // LUP_decomp
-    for (int i = 0; i < n; ++i) {
-        int mx = INT_MIN;
-        int idx = i;
-        for (int j = i; j < n; ++j) {
-            int uii = data[j + i * n];
-            int q = 0;
-            while (q < i) {
-                uii -= data[j + q * n] * data[q + j * n];
-                q++;
-            }
-            if (abs(uii) > mx) {
-                mx = abs(uii);
-                idx = j;
-            }
-        }
+   // cudaEvent_t start, stop;
+   // float gpu_time = 0.0;
+   // cudaEventCreate(&start);
+   // cudaEventCreate(&stop);
+   // cudaEventRecord(start, 0);
 
-        p[i] = idx;
-        for (int j = 0; j < n; ++j) {
-                swap(data[i + j * n], data[idx + j * n]);
-        }
+	CUDA_ERROR(cudaMemcpy(dev_data, data, sizeof(double) * n * n, cudaMemcpyHostToDevice));
+	// fprintf(stderr, "Got data\n");
 
-        // Got U
-        for (int j = i; j < n; ++j) {
-            int q = 0;
-            while (q < i) {
-                data[i + j * n] -= data[i + q * n] * data[q + j * n];
-                q++;
-            }
-        }
+	dim3 BLOCKS(32, 32);
+	dim3 THREADS(32, 32);
 
-        // Got L
-        for (int j = i + 1; j < n; ++j) {
-            int q = 0;
-            while (q < i) {
-                data[j + i * n] -= data[j + q * n] * data[q + i * n];
-                q++;
-            }
-            data[j + i * n] /= data[i + i * n];
-        }
-    }
+	int max_idx;
+	// double mx;
+	abs_comparator cmp;
+	thrust::device_ptr<double> data_ptr;
+	thrust::device_ptr<double> max_ptr;
 
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            // cout << data[i + j * n] << " ";
-            printf("%.10e ", data[i + j * n]);
-        }
-        printf("\n");
-    }
+	for (int i = 0; i < n - 1; ++i) {
+		max_idx = i;
 
-    for (int j = 0; j < n; ++j) {
-        // cout << p[j] << " ";
-        printf("%d ", p[j]);
-    }
+		// Find max in column from i to n (cast to data_ptr == start)
+		data_ptr = thrust::device_pointer_cast(dev_data + i * n);
+		// Pointer e.x. largest == data + 3
+		max_ptr = thrust::max_element(data_ptr + i, data_ptr + n, cmp);
 
-    printf("\n");
-    return 0;
+		max_idx = max_ptr - data_ptr;
+		// mx = fabs(*max_ptr);
+		// fprintf(stderr, "Find max idx=%d\n", max_idx);
+		// fprintf(stderr, "MAX=%f\n", mx);
+
+		p[i] = max_idx;
+		if (max_idx != i) {
+			kernel_swap<<<32, 32>>>(dev_data, n, i, max_idx);
+			CUDA_ERROR(cudaGetLastError());
+		}
+
+		kernel_compute_L<<<32, 32>>>(dev_data, n, i);
+		CUDA_ERROR(cudaGetLastError());
+		CUDA_ERROR(cudaThreadSynchronize());
+
+		kernel_compute_U<<<BLOCKS, THREADS>>>(dev_data, n, i);
+		CUDA_ERROR(cudaGetLastError());
+		CUDA_ERROR(cudaThreadSynchronize());
+
+		fprintf(stderr, "Iter=%d\n", i);
+	}
+	CUDA_ERROR(cudaMemcpy(data, dev_data, sizeof(double) * n * n, cudaMemcpyDeviceToHost));
+	CUDA_ERROR(cudaFree(dev_data));
+
+	for (int i = 0; i < n; ++i) {
+		for (int j = 0; j < n; ++j) {
+			// cout << data[i + j * n] << " ";
+			printf("%.10e ", data[i + j * n]);
+		}
+		printf("\n");
+	}
+
+	for (int j = 0; j < n; ++j) {
+		// cout << p[j] << " ";
+		printf("%d ", p[j]);
+	}
+
+	printf("\n");
+
+	free(data);
+	free(p);
+
+	// cudaEventRecord(stop, 0);
+	// cudaEventSynchronize(stop);
+	// cudaEventElapsedTime(&gpu_time, start, stop);
+	// fprintf(stderr, "Time %f\n", gpu_time);
+	return 0;
 }

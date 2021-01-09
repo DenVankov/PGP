@@ -21,18 +21,17 @@ int main(int argc, char const *argv[]) {
 
     // LUP_decomp
     for (int i = 0; i < n; ++i) {
-        int mx = INT_MIN;
+        double mx = DBL_MIN;
         int idx = i;
         for (int j = i; j < n; ++j) {
-            int uii = data[j + i * n];
-            int q = 0;
-            while (q < i) {
+            double uii = data[j + i * n];
+            for (int q = 0; q < i; ++q) {
                 uii -= data[j + q * n] * data[q + j * n];
-                q++;
             }
             if (abs(uii) > mx) {
                 mx = abs(uii);
                 idx = j;
+                fprintf(stderr, "MAX=%f\n", mx);
             }
         }
 
@@ -43,27 +42,33 @@ int main(int argc, char const *argv[]) {
 
         // Got U
         for (int j = i; j < n; ++j) {
-            int q = 0;
-            while (q < i) {
+            for (int q = 0; q < i; ++q) {
                 data[i + j * n] -= data[i + q * n] * data[q + j * n];
-                q++;
             }
         }
 
         // Got L
         for (int j = i + 1; j < n; ++j) {
-            int q = 0;
-            while (q < i) {
+            for (int q = 0; q < i; ++ q) {
                 data[j + i * n] -= data[j + q * n] * data[q + i * n];
-                q++;
             }
             data[j + i * n] /= data[i + i * n];
         }
+
+        for (int k = 0; k < n; ++k) {
+            for (int j = 0; j < n; ++j) {
+                // cout << data[i + j * n] << " ";
+                printf("%.10e ", data[k + j * n]);
+            }
+            printf("\n");
+        }
+        printf("\n");
     }
 
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            cout << data[i + j * n] << " ";
+            // cout << data[i + j * n] << " ";
+            printf("%.10e ", data[i + j * n]);
         }
         cout << "\n";
     }
