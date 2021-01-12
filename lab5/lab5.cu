@@ -50,11 +50,11 @@ __device__ void swap_step(int* nums, int* tmp, int size, int start, int stop, in
 			// The threads with the lowest ids sort the array
 			if (XOR > i) {
 				if ((i & BLOCK_SIZE) != 0) {
-					// Sort descending, swap(i, XOR)		
+					// Step descending, swap(i, XOR)
 					if (sh_array[i] < sh_array[XOR])
 						thrust::swap(sh_array[i], sh_array[XOR]);
 				} else {
-					// Sort ascending, swap(i, XOR)
+					// Step ascending, swap(i, XOR)
 					if (sh_array[i] > sh_array[XOR])
 						thrust::swap(sh_array[i], sh_array[XOR]);
 				}
@@ -113,11 +113,11 @@ __global__ void bitonic_sort_step(int *nums, int j, int k, int size) {
 				// The threads with the lowest ids sort the array
 				if (XOR > i) {
 					if ((i & k) != 0) {
-						// Sort descending, swap(i, XOR)		
+						// Step descending, swap(i, XOR)
 						if (sh_array[i] < sh_array[XOR])
 							thrust::swap(sh_array[i], sh_array[XOR]);
 					} else {
-						// Sort ascending, swap(i, XOR)
+						// Step ascending, swap(i, XOR)
 						if (sh_array[i] > sh_array[XOR])
 							thrust::swap(sh_array[i], sh_array[XOR]);
 					}
@@ -143,6 +143,7 @@ int main(int argc, char *argv[]) {
 	fread(&size, sizeof(int), 1, stdin);
 	fprintf(stderr, "%d ", size);
 
+	// To the degree of 2^n (1024 max)
 	upd_size = ceil((double)size / BLOCK_SIZE) * BLOCK_SIZE;
 	int* data = (int*)malloc(sizeof(int) * upd_size);
 	int* dev_data;
@@ -161,7 +162,7 @@ int main(int argc, char *argv[]) {
 
 	// Copy to device
 	CUDA_ERROR(cudaMemcpy(dev_data, data, upd_size, cudaMemcpyHostToDevice));
-	
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Pre sort of all blocks by bitonic sort
 	// Main step
@@ -174,23 +175,24 @@ int main(int argc, char *argv[]) {
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	/* 
+	/*
 	Implementation of odd-even sort
 	Sort of buckets with bitonic merge inside
 	| 1 3 5 7 | 2 4 6 8 | -> | 1 2 3 4 5 6 7 8| (size == 8)
-	
+
 	Including 2 steps merge + splitting
 	*/
 	for (int i = 0; i < 2 * (upd_size / BLOCK_SIZE); ++i) {
 		kernel_bitonic_merge_step<<<NUM_BLOCKS, BLOCK_SIZE>>>(dev_data, upd_size, (bool)(i % 2), true);
+		CUDA_ERROR(cudaGetLastError());
 	}
 
 	CUDA_ERROR(cudaMemcpy(data, dev_data, upd_size, cudaMemcpyDeviceToHost))
 	CUDA_ERROR(cudaFree(dev_data));
 
-	// for (int i = 0; i < size; ++i) {
-	// 	printf("%d ", data[i]);
-	// }
+	for (int i = 0; i < size; ++i) {
+		fprintf(stderr, "%d ", data[i]);
+	}
 	// printf("\n");
 	fwrite(data, sizeof(int), size, stdout);
 
