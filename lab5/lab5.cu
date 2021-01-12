@@ -46,7 +46,7 @@ __device__ void swap_step(int* nums, int* tmp, int size, int start, int stop, in
 
 		// From half
 		for (int j = BLOCK_SIZE / 2; j > 0; j /= 2) {
-			int XOR = i ^ j;
+			unsigned in XOR = i ^ j;
 			// The threads with the lowest ids sort the array
 			if (XOR > i) {
 				if ((i & BLOCK_SIZE) != 0) {
@@ -73,7 +73,7 @@ __global__ void kernel_bitonic_merge_step(int* nums, int size, bool is_odd, bool
 	int* tmp = nums;
 
 	// Every thread gets exactly one value in the unsorted array
-	int i = threadIdx.x;
+	unsigned in i = threadIdx.x;
 	int id_block = blockIdx.x;
 	int offset = gridDim.x;
 
@@ -93,7 +93,7 @@ __global__ void bitonic_sort_step(int *nums, int j, int k, int size) {
 	int* tmp = nums;
 
 	// Every thread gets exactly one value in the unsorted array
-	int i = threadIdx.x;
+	unsigned in i = threadIdx.x;
 	int id_block = blockIdx.x;
 	int offset = gridDim.x;
 
@@ -109,7 +109,7 @@ __global__ void bitonic_sort_step(int *nums, int j, int k, int size) {
 
 			// From half
 			for (j = k / 2; j > 0; j /= 2) {
-				int XOR = i ^ j;
+				unsigned in XOR = i ^ j;
 				// The threads with the lowest ids sort the array
 				if (XOR > i) {
 					if ((i & k) != 0) {
@@ -149,12 +149,12 @@ int main(int argc, char *argv[]) {
 	int* dev_data;
 	CUDA_ERROR(cudaMalloc((void**)&dev_data, sizeof(int) * upd_size));
 
-	for (int i = 0; i < size; ++i) {
+	// for (int i = 0; i < size; ++i) {
 		// fread(&size, sizeof(int), 1, stdin);
 		// scanf("%d", &data[i]);
-		fprintf(stderr, "%d ", data[i]);
-	}
-	fprintf(stderr, "\n");
+	// 	// fprintf(stderr, "%d ", data[i]);
+	// }
+	// fprintf(stderr, "\n");
 
 	fread(data, sizeof(int), size, stdin);
 	for (int i = size; i < upd_size; ++i) {
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Copy to device
-	CUDA_ERROR(cudaMemcpy(dev_data, data, upd_size, cudaMemcpyHostToDevice));
+	CUDA_ERROR(cudaMemcpy(dev_data, data, sizeof(int) * upd_size, cudaMemcpyHostToDevice));
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Pre sort of all blocks by bitonic sort
@@ -188,13 +188,14 @@ int main(int argc, char *argv[]) {
 		CUDA_ERROR(cudaGetLastError());
 	}
 
-	CUDA_ERROR(cudaMemcpy(data, dev_data, upd_size, cudaMemcpyDeviceToHost))
+	CUDA_ERROR(cudaMemcpy(data, dev_data, sizeof(int) * upd_size, cudaMemcpyDeviceToHost))
 	CUDA_ERROR(cudaFree(dev_data));
 
 	for (int i = 0; i < size; ++i) {
 		fprintf(stderr, "%d ", data[i]);
 	}
-	// printf("\n");
+	fprintf(stderr, "\n");
+	
 	fwrite(data, sizeof(int), size, stdout);
 
 	free(data);
