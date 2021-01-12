@@ -24,7 +24,7 @@ typedef long long ll;
 	} \
 } \
 
-#define NUM_BLOCKS 8
+#define NUM_BLOCKS 10
 #define BLOCK_SIZE 1024
 
 __device__ void swap_step(int* nums, int* tmp, int size, int start, int stop, int step, int i) {
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
 	// Allocating + inputting
 	// scanf("%d", &size);
 	fread(&size, sizeof(int), 1, stdin);
-	fprintf(stderr, "%d ", size);
+	fprintf(stderr, "%d\n", size);
 
 	// To the degree of 2^n (1024 max)
 	upd_size = ceil((double)size / BLOCK_SIZE) * BLOCK_SIZE;
@@ -149,11 +149,12 @@ int main(int argc, char *argv[]) {
 	int* dev_data;
 	CUDA_ERROR(cudaMalloc((void**)&dev_data, sizeof(int) * upd_size));
 
-	// for (int i = 0; i < size; ++i) {
+	for (int i = 0; i < size; ++i) {
 		// fread(&size, sizeof(int), 1, stdin);
 		// scanf("%d", &data[i]);
-		// fprintf(stderr, "%d ", size);
-	// }
+		fprintf(stderr, "%d ", data[i]);
+	}
+	fprintf(stderr, "\n");
 
 	fread(data, sizeof(int), size, stdin);
 	for (int i = size; i < upd_size; ++i) {
