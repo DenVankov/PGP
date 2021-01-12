@@ -46,7 +46,7 @@ __device__ void swap_step(int* nums, int* tmp, int size, int start, int stop, in
 
 		// From half
 		for (int j = BLOCK_SIZE / 2; j > 0; j /= 2) {
-			unsigned in XOR = i ^ j;
+			unsigned int XOR = i ^ j;
 			// The threads with the lowest ids sort the array
 			if (XOR > i) {
 				if ((i & BLOCK_SIZE) != 0) {
@@ -73,7 +73,7 @@ __global__ void kernel_bitonic_merge_step(int* nums, int size, bool is_odd, bool
 	int* tmp = nums;
 
 	// Every thread gets exactly one value in the unsorted array
-	unsigned in i = threadIdx.x;
+	unsigned int i = threadIdx.x;
 	int id_block = blockIdx.x;
 	int offset = gridDim.x;
 
@@ -93,7 +93,7 @@ __global__ void bitonic_sort_step(int *nums, int j, int k, int size) {
 	int* tmp = nums;
 
 	// Every thread gets exactly one value in the unsorted array
-	unsigned in i = threadIdx.x;
+	unsigned int i = threadIdx.x;
 	int id_block = blockIdx.x;
 	int offset = gridDim.x;
 
@@ -109,7 +109,7 @@ __global__ void bitonic_sort_step(int *nums, int j, int k, int size) {
 
 			// From half
 			for (j = k / 2; j > 0; j /= 2) {
-				unsigned in XOR = i ^ j;
+				unsigned int XOR = i ^ j;
 				// The threads with the lowest ids sort the array
 				if (XOR > i) {
 					if ((i & k) != 0) {
@@ -168,6 +168,8 @@ int main(int argc, char *argv[]) {
 	// Pre sort of all blocks by bitonic sort
 	// Main step
 	for (int k = 2; k <= upd_size; k *= 2) {
+		if (k > BLOCK_SIZE)
+			break;
 		// Merge and split step
 		for (int j = k / 2; j > 0; j /= 2) {
 			bitonic_sort_step<<<NUM_BLOCKS, BLOCK_SIZE>>>(dev_data, j, k, upd_size);
@@ -195,7 +197,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "%d ", data[i]);
 	}
 	fprintf(stderr, "\n");
-	
+
 	fwrite(data, sizeof(int), size, stdout);
 
 	free(data);
