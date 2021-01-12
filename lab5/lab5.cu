@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
 	Including 2 steps merge + splitting
 	*/
 	for (int i = 0; i < 2 * (upd_size / BLOCK_SIZE); ++i) {
-		kernel_bitonic_merge_step<<<NUM_BLOCKS, NUM_BLOCKS>>>(dev_data, upd_size, (bool)(i % 2), true);
+		kernel_bitonic_merge_step<<<NUM_BLOCKS, BLOCK_SIZE>>>(dev_data, upd_size, (bool)(i % 2), true);
 	}
 
 	CUDA_ERROR(cudaMemcpy(data, dev_data, upd_size, cudaMemcpyDeviceToHost))
