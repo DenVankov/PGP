@@ -34,7 +34,7 @@ __device__ void swap_step(int* nums, int* tmp, int size, int start, int stop, in
 	// Step for bitonic merge inside merging
 	for (int shift = start; shift < stop; shift += step) {
 		// New start pointer
-		ctmp = nums + shift;
+		tmp = nums + shift;
 
 		// Right side
 		if (i >= BLOCK_SIZE / 2)
@@ -73,9 +73,9 @@ __global__ void kernel_bitonic_merge_step(int* nums, int size, bool is_odd, bool
 	int* tmp = nums;
 
 	// Every thread gets exactly one value in the unsorted array
+	int i = threadIdx.x;
 	int id_block = blockIdx.x;
 	int offset = gridDim.x;
-	int i = threadIdx.x;
 
 	// For odd step
 	if(is_odd) {
@@ -93,12 +93,12 @@ __global__ void bitonic_sort_step(int *nums, int j, int k, int size) {
 	int* tmp = nums;
 
 	// Every thread gets exactly one value in the unsorted array
+	int i = threadIdx.x;
 	int id_block = blockIdx.x;
 	int offset = gridDim.x;
-	int i = threadIdx.x;
 
 	// Step for bitonic sort
-  	for (int shift = id_block * BLOCK_SIZE; shift < size; shift += offset * BLOCK_SIZE) {
+	for (int shift = id_block * BLOCK_SIZE; shift < size; shift += offset * BLOCK_SIZE) {
 			// New start pointer
 			tmp = nums + shift;
 
@@ -135,21 +135,26 @@ int main(int argc, char *argv[]) {
 	ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
 	cout.tie(nullptr);
+
 	int size, upd_size;
 
 	// Allocating + inputting
-	scanf("%d", &size);
+	// scanf("%d", &size);
+	fread(&size, sizeof(int), 1, stdin);
+	fprintf(stderr, "%d ", size);
+
 	upd_size = ceil((double)size / BLOCK_SIZE) * BLOCK_SIZE;
 	int* data = (int*)malloc(sizeof(int) * upd_size);
 	int* dev_data;
 	CUDA_ERROR(cudaMalloc((void**)&dev_data, sizeof(int) * upd_size));
 
-	for (int i = 0; i < size; ++i) {
+	// for (int i = 0; i < size; ++i) {
 		// fread(&size, sizeof(int), 1, stdin);
-		scanf("%d", &data[i]);
+		// scanf("%d", &data[i]);
 		// fprintf(stderr, "%d ", size);
-	}
+	// }
 
+	fread(data, sizeof(int), size, stdin);
 	for (int i = size; i < upd_size; ++i) {
 		data[i] = INT_MAX;
 	}
@@ -159,32 +164,35 @@ int main(int argc, char *argv[]) {
 	
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Pre sort of all blocks by bitonic sort
-  	// Main step
-  	for (int k = 2; k <= upd_size; k *= 2) {
-    	// Merge and split step
-    	for (int j = k / 2; j > 0; j /= 2) {
-      		bitonic_sort_step<<<NUM_BLOCKS, BLOCK_SIZE>>>(dev_data, j, k, upd_size);
+	// Main step
+	for (int k = 2; k <= upd_size; k *= 2) {
+		// Merge and split step
+		for (int j = k / 2; j > 0; j /= 2) {
+			bitonic_sort_step<<<NUM_BLOCKS, BLOCK_SIZE>>>(dev_data, j, k, upd_size);
 			CUDA_ERROR(cudaGetLastError());
-    	}
-  	}
-  	////////////////////////////////////////////////////////////////////////////////////////
+		}
+	}
+	////////////////////////////////////////////////////////////////////////////////////////
 
-	/* Sort of buckets with bitonic merge inside
+	/* 
+	Implementation of odd-even sort
+	Sort of buckets with bitonic merge inside
 	| 1 3 5 7 | 2 4 6 8 | -> | 1 2 3 4 5 6 7 8| (size == 8)
 	
 	Including 2 steps merge + splitting
 	*/
 	for (int i = 0; i < 2 * (upd_size / BLOCK_SIZE); ++i) {
-        kernel_bitonic_merge_step<<<NUM_BLOCKS, NUM_BLOCKS>>>(dev_data, upd_size, (bool)(i % 2), true);
-    }
+		kernel_bitonic_merge_step<<<NUM_BLOCKS, NUM_BLOCKS>>>(dev_data, upd_size, (bool)(i % 2), true);
+	}
 
 	CUDA_ERROR(cudaMemcpy(data, dev_data, upd_size, cudaMemcpyDeviceToHost))
 	CUDA_ERROR(cudaFree(dev_data));
 
-	for (int i = 0; i < size; ++i) {
-		printf("%d ", data[i]);
-	}
-	printf("\n");
+	// for (int i = 0; i < size; ++i) {
+	// 	printf("%d ", data[i]);
+	// }
+	// printf("\n");
+	fwrite(data, sizeof(int), size, stdout);
 
 	free(data);
 	return 0;
